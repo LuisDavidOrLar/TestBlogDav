@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Body, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
@@ -25,15 +25,15 @@ def create_refresh_token(data: dict, expires_delta: timedelta = None):
     return encoded_jwt
 
 @router.post("/register")
-async def register_user(user: UserCreate):
-    existing_user = await get_user_by_email(user.email)
+async def register_user(request: Request, user: UserCreate):
+    existing_user = await get_user_by_email(request, user.email)
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     hashed_pwd = hash_password(user.password)
     user_data = user.dict()
     user_data["hashed_password"] = hashed_pwd
     del user_data["password"]
-    user_id = await create_user(user_data)
+    user_id = await create_user(request, user_data)
     if user_id:
         access_token = create_access_token(data={"sub": user.email})
         refresh_token = create_refresh_token(data={"sub": user.email})
@@ -41,7 +41,7 @@ async def register_user(user: UserCreate):
     else:
         raise HTTPException(status_code=500, detail="Failed to create user")
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
+async def get_current_user(request: Request, token: str = Depends(oauth2_scheme)) -> User:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
@@ -50,7 +50,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     
-    user = await get_user_by_email(email)
+    user = await get_user_by_email(request, email)
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
@@ -60,13 +60,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
         is_active=user.get("is_active", True) 
     )
 
-
 @router.get("/users/me", response_model=User)
-async def read_user_me(current_user: User = Depends(get_current_user)):
+async def read_user_me(request: Request, current_user: User = Depends(get_current_user)):
     return current_user
 
-async def authenticate_user(email: str, password: str):
-    user = await get_user_by_email(email)
+async def authenticate_user(request: Request, email: str, password: str):
+    user = await get_user_by_email(request, email)
     if not user:
         return False
     if not verify_password(password, user["hashed_password"]):
@@ -74,8 +73,8 @@ async def authenticate_user(email: str, password: str):
     return user
 
 @router.post("/token")
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = await authenticate_user(form_data.username, form_data.password)
+async def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
+    user = await authenticate_user(request, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -87,7 +86,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
 @router.post("/refresh-token")
-async def refresh_token(refresh_token: str = Body(...)):
+async def refresh_token(request: Request, refresh_token: str = Body(...)):
     try:
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
@@ -100,6 +99,6 @@ async def refresh_token(refresh_token: str = Body(...)):
     return {"access_token": new_access_token, "token_type": "bearer"}
 
 @router.get("/user-posts")
-async def get_user_posts(current_user: User = Depends(get_current_user)):
-    posts = await fetch_user_blog_posts(current_user.email)
+async def get_user_posts(request: Request, current_user: User = Depends(get_current_user)):
+    posts = await fetch_user_blog_posts(request, current_user.email)
     return posts

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Body, UploadFile, File, Form, Depends
+from fastapi import APIRouter, HTTPException, Body, UploadFile, File, Form, Depends, Request
 from fastapi.responses import FileResponse
 from typing import List
 from datetime import datetime
@@ -9,6 +9,7 @@ from auth import get_current_user
 from models.user_models import UserCreate, User
 from models.blog_models import BlogPost, BlogPostUpdate, BlogPostResponse 
 from utils import hash_password
+
 router = APIRouter()
 
 UPLOAD_DIR = "uploads"
@@ -16,12 +17,13 @@ if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
 
 @router.get("/posts", response_model=List[BlogPostResponse])
-async def read_posts():
-    posts = await fetch_all_blog_posts()
+async def read_posts(request: Request):
+    posts = await fetch_all_blog_posts(request)
     return [BlogPostResponse(**post) for post in posts]
 
 @router.post("/posts", response_model=BlogPostResponse)
 async def create_post(
+    request: Request,
     title: str = Form(...),
     content: str = Form(...),
     author: str = Form(...),
@@ -47,7 +49,7 @@ async def create_post(
         "created_at": datetime.now()
     }
 
-    new_post = await add_blog_post(post_data)
+    new_post = await add_blog_post(request, post_data)
     if new_post is None:
         raise HTTPException(status_code=400, detail="Failed to create post")
     
@@ -56,19 +58,19 @@ async def create_post(
     return BlogPostResponse(**new_post)
 
 @router.get("/user-posts", response_model=List[BlogPostResponse])
-async def read_user_posts(current_user: User = Depends(get_current_user)):
-    posts = await fetch_user_blog_posts(current_user.email)
+async def read_user_posts(request: Request, current_user: User = Depends(get_current_user)):
+    posts = await fetch_user_blog_posts(request, current_user.email)
     return posts
 
 @router.put("/posts/{id}")
-async def update_post(id: str, post: dict):
-    if await update_blog_post(id, post):
+async def update_post(request: Request, id: str, post: dict):
+    if await update_blog_post(request, id, post):
         return {"message": "Post updated successfully"}
     raise HTTPException(status_code=404, detail="Post not found")
 
 @router.delete("/posts/{id}")
-async def remove_post(id: str):
-    if await delete_blog_post(id):
+async def remove_post(request: Request, id: str):
+    if await delete_blog_post(request, id):
         return {"message": "Post deleted successfully"}
     raise HTTPException(status_code=404, detail="Post not found")
 
@@ -80,9 +82,9 @@ async def get_image(image_path: str):
     return FileResponse(file_path)
 
 @router.post("/users/", response_model=UserCreate)
-async def create_user_endpoint(user: UserCreate = Body(...)):
+async def create_user_endpoint(request: Request, user: UserCreate = Body(...)):
     user_dict = user.dict()
     hashed_password = hash_password(user_dict.pop('password'))
     user_dict['hashed_password'] = hashed_password
-    await create_user(user_dict)
+    await create_user(request, user_dict)
     return {**user_dict, "password": "hidden"}

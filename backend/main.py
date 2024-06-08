@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from auth import router as auth_router
 from blog_routes import router as blog_router
+from motor.motor_asyncio import AsyncIOMotorClient
+from config import MONGO_DETAILS, DATABASE_NAME
 
 app = FastAPI()
 
@@ -20,3 +22,12 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(blog_router)
+
+@app.on_event("startup")
+async def startup_db_client():
+    app.mongodb_client = AsyncIOMotorClient(MONGO_DETAILS)
+    app.mongodb = app.mongodb_client[DATABASE_NAME]
+
+@app.on_event("shutdown")
+async def shutdown_db_client():
+    app.mongodb_client.close()
