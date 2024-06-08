@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://test-blog-dav-backend.vercel.app';
+const API_URL = 'https://testblogdav.onrender.com';
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
