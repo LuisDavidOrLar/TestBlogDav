@@ -45,7 +45,7 @@ const MyPosts: React.FC = () => {
   const Card = ({ post }: { post: Post }) => (
     <div className="max-w-sm rounded overflow-hidden shadow-lg cursor-pointer" onClick={() => handlePostClick(post)}>
       <div className="relative w-full h-48">
-        <img className="w-full h-full object-cover" src={`http://127.0.0.1:8000${post.imageUrl}`} alt={post.title} />
+        <img className="w-full h-full object-cover" src={`https://test-blog-dav-backend.vercel.app${post.imageUrl}`} alt={post.title} />
       </div>
       <div className="px-6 py-4">
         <div className="font-bold text-xl mb-2">{post.title}</div>
