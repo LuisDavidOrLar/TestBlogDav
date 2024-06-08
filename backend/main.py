@@ -33,3 +33,7 @@ async def startup_db_client():
 async def shutdown_db_client():
     app.mongodb_client.close()
     print("Closed connection to MongoDB")
+
+@app.get("/")
+async def root():
+    return {"message": "Welcome to my FastAPI backend!"}
