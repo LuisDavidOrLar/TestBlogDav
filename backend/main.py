@@ -8,7 +8,7 @@ from config import MONGO_DETAILS, DATABASE_NAME
 app = FastAPI()
 
 allowed_origins = [
-    "http://localhost:5173",
+    "http://localhost:5173", 
     "https://test-blog-dav-frontend.vercel.app",
 ]
 
