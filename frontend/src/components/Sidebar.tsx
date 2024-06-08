@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LuUserCircle2, LuLayoutDashboard, LuPlusCircle } from "react-icons/lu";
+import logo from '/src/assets/logo.png'; 
 
 const Sidebar: React.FC = () => {
   const getButtonClassName = ({ isActive }: { isActive: boolean }) => {
@@ -23,7 +24,7 @@ const Sidebar: React.FC = () => {
     <div className="bg-white shadow-lg flex flex-col justify-between w-1/6">
       
       <div className="flex flex-col items-center justify-start pt-6">
-        <img src="\src\assets\logo.png" alt="Logo" className="w-1/2 mb-12" />
+        <img src={logo}alt="Logo" className="w-1/2 mb-12" />
       </div>
 
       <div className="flex flex-col items-center flex-grow justify-center">
