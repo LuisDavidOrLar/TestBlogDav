@@ -8,16 +8,16 @@ from config import MONGO_DETAILS, DATABASE_NAME
 app = FastAPI()
 
 allowed_origins = [
-    "http://localhost:5173", 
+    "http://localhost:5173",
     "https://test-blog-dav-frontend.vercel.app",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins, 
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],  
+    allow_headers=["*"],
 )
 
 app.include_router(auth_router)
@@ -27,7 +27,9 @@ app.include_router(blog_router)
 async def startup_db_client():
     app.mongodb_client = AsyncIOMotorClient(MONGO_DETAILS)
     app.mongodb = app.mongodb_client[DATABASE_NAME]
+    print("Connected to MongoDB")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
     app.mongodb_client.close()
+    print("Closed connection to MongoDB")
