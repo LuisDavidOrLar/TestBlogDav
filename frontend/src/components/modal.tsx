@@ -22,7 +22,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, post }) => {
           <XCircleIcon className="w-6 h-6 text-gray-700" />
         </button>
         <div className="relative w-full h-48 mb-4">
-          <img className="w-full h-full object-contain rounded" src={`https://test-blog-dav-backend.vercel.app${post.imageUrl}`} alt={post.title} />
+          <img className="w-full h-full object-contain rounded" src={`https://testblogdav.onrender.com${post.imageUrl}`} alt={post.title} />
         </div>
         <h2 className="text-xl font-bold mt-4">{post.title}</h2>
         <p className="text-gray-700 mt-2">{post.content}</p>
