@@ -1,6 +1,6 @@
 import LoginForm from '../components/LoginForm';
 import logo from '/src/assets/logo.png'; 
-import '../home.css'
+
 
 const Home = () => {
   return (
